@@ -1,13 +1,40 @@
-﻿using GTA;
-using GTA.Math;
-using GTA.Native;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
 
-namespace BetterChasesPlus
+namespace BetterChases
 {
     public class Helpers
     {
+        public static List<Ped> GetNearbyPeds(Vector3 location, float size) //todo probably not good way // also move to my library c:
+        {
+            List<Ped> pedlist = new List<Ped> {};
+            foreach (var ped in World.GetAllPeds())
+            {
+                if (API.GetDistanceBetweenCoords(ped.Position.X, ped.Position.Y, ped.Position.Z, location.X, location.Y, location.Z, true) <= size)
+                {
+                    pedlist.Add(ped);
+                }
+            }
+
+            return pedlist;
+            //var peds = API.GetPedNearbyPeds(ped.Handle, ref size, -1);
+        }
+        
+        public static List<Vehicle> GetNearbyVehicles(Vector3 location, float size) //todo probably not good way // also move to my library c:
+        {
+            List<Vehicle> vehiclelist = new List<Vehicle> {};
+            foreach (var vehicle in World.GetAllVehicles())
+            {
+                if (API.GetDistanceBetweenCoords(vehicle.Position.X, vehicle.Position.Y, vehicle.Position.Z, location.X, location.Y, location.Z, true) <= size)
+                {
+                    vehiclelist.Add(vehicle);
+                }
+            }
+            return vehiclelist;
+        }
+        
         private static int wantedLevel = 0;
         private static int maxWantedLevel = 5;
 
@@ -218,7 +245,7 @@ namespace BetterChasesPlus
             int population = 0;
             bool populated = false;
 
-            Ped[] peds = World.GetNearbyPeds(position, range);
+            List<Ped> peds = Helpers.GetNearbyPeds(position, range);
             foreach (Ped ped in peds)
             {
                 if (population < threshold)

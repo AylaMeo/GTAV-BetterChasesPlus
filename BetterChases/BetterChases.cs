@@ -1,14 +1,12 @@
-﻿using GTA;
-using GTA.Math;
-using GTA.Native;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using System.Xml.Serialization;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
 
-namespace BetterChasesPlus
+namespace BetterChases
 {
     public class BetterChases
     {
@@ -95,7 +93,7 @@ namespace BetterChasesPlus
             return chase;
         }
 
-        public class BetterChasesPassive : Script
+        public class BetterChasesPassive : BaseScript
         {
             private static bool IsWanted;
             private static bool WasWanted;
@@ -115,11 +113,12 @@ namespace BetterChasesPlus
             public BetterChasesPassive()
             {
                 Tick += OnTick;
-                Interval = 250;
+                //Interval = 250; //todo this
             }
 
-            private void OnTick(object sender, EventArgs e)
+            private async Task OnTick()
             {
+                await Delay(250); //todo this
                 if (Config.Options.BetterChases.Enabled == false)
                     return;
 
@@ -305,7 +304,7 @@ namespace BetterChasesPlus
                 //                    cop.CanSwitchWeapons = false;
                 //                    //Function.Call(Hash.SET_PED_COMBAT_MOVEMENT, Cop, 0);
                 //                    //Function.Call(Hash.SET_PED_COMBAT_RANGE, Cop, 0);
-                //                    //RendererScript.DisplayHelpTextThisFrame("COP GIVEN SPECIAL GUN");
+                //                    //RendererFWScript.DisplayHelpTextThisFrame("COP GIVEN SPECIAL GUN");
                 //                }
                 //                else
                 //                {
@@ -345,7 +344,7 @@ namespace BetterChasesPlus
                 //        //    //Cop.Weapons.Current.Ammo = -1;
                 //        //    //Cop.Weapons.Current.AmmoInClip = -1;
                 //        //    //Cop.Weapons.RemoveAll();
-                //        //    //RendererScript.DisplayHelpTextThisFrame("SHOOT 0");
+                //        //    //RendererFWScript.DisplayHelpTextThisFrame("SHOOT 0");
                 //        //} else if (Cop.Weapons.Current.Hash == WeaponHash.StunGun)
                 //        //{
                 //        //    //Cop.Weapons.Current.Ammo = 9000;
@@ -362,7 +361,7 @@ namespace BetterChasesPlus
 
                     foreach (Vehicle vehicle in CopVehicles)
                     {
-                        if (vehicle.Model.IsCar || vehicle.Model.IsBike || vehicle.Model.IsQuadBike)
+                        if (vehicle.Model.IsCar || vehicle.Model.IsBike || vehicle.Model.IsQuadbike)
                         {
                             groundVehicles.Add(vehicle);
                         }
@@ -438,12 +437,12 @@ namespace BetterChasesPlus
                     if (character.IsInVehicle() || (character.IsBeingStunned || character.IsRagdoll || character.IsProne))
                     {
                         StopShooting = true;
-                        //Renderer.ShowSubtitle("Stop shooting");
+                        //RendererFW.ShowSubtitle("Stop shooting");
                     }
                     else if (StopShooting)
                     {
                         StopShooting = false;
-                        //Renderer.ShowSubtitle("OK shooting");
+                        //RendererFW.ShowSubtitle("OK shooting");
 
                         foreach (Ped cop in Cops)
                         {
@@ -459,7 +458,7 @@ namespace BetterChasesPlus
                     //    {
                     //        if (cop.IsAlive && cop.IsOnFoot && cop.IsInRange(character.Position, 20f) && !cop.IsInRange(character.Position, 6f) && !CopsMovingToCar.Contains(cop) && CopsMovingToCar.Count <= 2)
                     //        {
-                    //            Renderer.ShowSubtitle("Go!");
+                    //            RendererFW.ShowSubtitle("Go!");
                     //            cop.Task.ClearAllImmediately();
                     //            Function.Call(Hash.TASK_GO_TO_ENTITY_WHILE_AIMING_AT_ENTITY, cop, character.CurrentVehicle, character, 3f, false);
                     //            cop.AlwaysKeepTask = true;
@@ -469,7 +468,7 @@ namespace BetterChasesPlus
                     //        {
                     //            if (!CopsAimingAtCar.Contains(cop))
                     //            {
-                    //                Renderer.ShowSubtitle("Arrest!");
+                    //                RendererFW.ShowSubtitle("Arrest!");
                     //                cop.Task.ClearAllImmediately();
                     //                cop.Task.EnterVehicle(character.CurrentVehicle, VehicleSeat.Driver, 5000, 3f, EnterVehicleFlags.OnlyOpenDoor);
                     //                cop.AlwaysKeepTask = true;
@@ -477,7 +476,7 @@ namespace BetterChasesPlus
                     //            }
                     //            else if (!Function.Call<bool>(Hash.GET_IS_TASK_ACTIVE, cop, 160))
                     //            {
-                    //                Renderer.ShowSubtitle("Arrest NOW!");
+                    //                RendererFW.ShowSubtitle("Arrest NOW!");
                     //                cop.Task.EnterVehicle(character.CurrentVehicle, VehicleSeat.Driver, 5000, 3f, EnterVehicleFlags.OnlyOpenDoor);
                     //                cop.AlwaysKeepTask = true;
                     //            }
@@ -497,7 +496,7 @@ namespace BetterChasesPlus
                     //CopsMovingToCar.Clear();
                     //CopsAimingAtCar.Clear();
 
-                    //Renderer.ShowSubtitle("OK shooting2");
+                    //RendererFW.ShowSubtitle("OK shooting2");
 
                     foreach (Ped cop in Cops)
                     {
@@ -509,7 +508,7 @@ namespace BetterChasesPlus
 
                 //if (Config.Options.BetterChases.RequireLethalForceAuthorization && IsWanted && character.IsInVehicle() && !ActiveChase.DeadlyForce)
                 //{
-                //    //Renderer.ShowSubtitle("Don't shoot");
+                //    //RendererFW.ShowSubtitle("Don't shoot");
 
                 //    foreach (Ped cop in Cops)
                 //    {
@@ -554,10 +553,10 @@ namespace BetterChasesPlus
                 //}
 
                 // Allow extra bust opportunities (IsRunning is true when being stunned)
-                if (Config.Options.BetterChases.AllowBustOpportunity && IsWanted && Helpers.WantedLevel < 5 && !character.IsInVehicle() && !character.IsSwimming && !character.IsSwimmingUnderWater && !character.IsFalling && !character.IsJumping && !character.IsWalking && character.Speed < 2f && !character.IsInCover && !Game.Player.IsAiming)
+                if (Config.Options.BetterChases.AllowBustOpportunity && IsWanted && Helpers.WantedLevel < 5 && !character.IsInVehicle() && !character.IsSwimming && !character.IsSwimmingUnderWater && !character.IsFalling && !character.IsJumping && !character.IsWalking && API.GetEntitySpeed(character.Handle) < 2f && !character.IsInCover() && !Game.Player.IsAiming)
                 {
                     // Bust Oportunity Enable/Disable
-                    if ((Game.IsKeyPressed(Config.Options.SurrenderKey) || Game.IsControlPressed(Config.Options.SurrenderButton)) && Helpers.IsCopNearby(character.Position, 20f))
+                    if ((Game.IsControlPressed(0, Control.FrontendRb) || Game.IsControlPressed(0, Control.FrontendRb)) && Helpers.IsCopNearby(character.Position, 20f))
                     {
                         IsGettingBusted = true;
                     }
@@ -617,7 +616,7 @@ namespace BetterChasesPlus
 
                 //            if (Config.Options.DisplayHints)
                 //            {
-                //                Renderer.ShowHelpMessage("You have crashed into too many vehicles. The Wanted Level is now ~y~" + Helpers.WantedLevel + " Star(s)~w~.");
+                //                RendererFW.ShowHelpMessage("You have crashed into too many vehicles. The Wanted Level is now ~y~" + Helpers.WantedLevel + " Star(s)~w~.");
                 //            }
                 //        }
                 //    }
@@ -651,14 +650,14 @@ namespace BetterChasesPlus
 
                 //        if (Config.Options.DisplayHints)
                 //        {
-                //            Renderer.ShowHelpMessage("You have run over a pedestrian, ~y~PIT~w~ has been authorized.");
-                //            Renderer.ShowHelpMessage("Cops will now ~y~ram you~w~ at will.");
-                //            Renderer.ShowHelpMessage("However, they will still refrain from doing so in ~y~populated areas~w~.");
+                //            RendererFW.ShowHelpMessage("You have run over a pedestrian, ~y~PIT~w~ has been authorized.");
+                //            RendererFW.ShowHelpMessage("Cops will now ~y~ram you~w~ at will.");
+                //            RendererFW.ShowHelpMessage("However, they will still refrain from doing so in ~y~populated areas~w~.");
                 //        }
 
                 //        if (Config.Options.BetterChases.ShowBigMessages)
                 //        {
-                //            Renderer.ShowBigMessage("PIT AUTHORIZED", "", Renderer.HudColor.GOLD, Renderer.HudColor.BLACK, 3000);
+                //            RendererFW.ShowBigMessage("PIT AUTHORIZED", "", RendererFW.HudColor.GOLD, RendererFW.HudColor.BLACK, 3000);
                 //        }
                 //    }
                 //}
@@ -699,7 +698,7 @@ namespace BetterChasesPlus
 
                             if (Config.Options.DisplayHints)
                             {
-                                Renderer.ShowHelpMessage("The chase has gone on too long and is escalating.");
+                                Render.Functions.ShowHelpMessage("The chase has gone on too long and is escalating.");
                             }
                         }
                     }
@@ -736,7 +735,7 @@ namespace BetterChasesPlus
 
                             if (Config.Options.DisplayHints)
                             {
-                                Renderer.ShowHelpMessage("The chase has gone on too long and is continuing to escalate.");
+                                Render.Functions.ShowHelpMessage("The chase has gone on too long and is continuing to escalate.");
                             }
                         }
                     }
@@ -773,7 +772,7 @@ namespace BetterChasesPlus
 
                             if (Config.Options.DisplayHints)
                             {
-                                Renderer.ShowHelpMessage("You have continued to elude the police with no sign of stopping.");
+                                Render.Functions.ShowHelpMessage("You have continued to elude the police with no sign of stopping.");
                             }
                         }
                     }
@@ -810,7 +809,7 @@ namespace BetterChasesPlus
 
                             if (Config.Options.DisplayHints)
                             {
-                                Renderer.ShowHelpMessage("You have continued to elude the police with no sign of stopping.");
+                                Render.Functions.ShowHelpMessage("You have continued to elude the police with no sign of stopping.");
                             }
                         }
                     }
@@ -854,7 +853,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted driving a stolen vehicle during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted driving a stolen vehicle during a chase.");
                                 }
                             }
                         }
@@ -899,7 +898,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted stealing a vehicle during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted stealing a vehicle during a chase.");
                                 }
                             }
                         }
@@ -954,7 +953,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted driving very fast during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted driving very fast during a chase.");
                                 }
                             }
                         }
@@ -999,7 +998,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You have been driving on sidewalks or the wrong way.");
+                                    Render.Functions.ShowHelpMessage("You have been driving on sidewalks or the wrong way.");
                                 }
                             }
                         }
@@ -1044,7 +1043,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted brandishing a weapon during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted brandishing a weapon during a chase.");
                                 }
                             }
                         }
@@ -1089,7 +1088,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted aiming a weapon during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted aiming a weapon during a chase.");
                                 }
                             }
                         }
@@ -1140,7 +1139,7 @@ namespace BetterChasesPlus
 
                                             if (Config.Options.DisplayHints)
                                             {
-                                                Renderer.ShowHelpMessage("You were spotted harming a civilian during a chase.");
+                                                Render.Functions.ShowHelpMessage("You were spotted harming a civilian during a chase.");
                                             }
 
                                             break;
@@ -1192,7 +1191,7 @@ namespace BetterChasesPlus
 
                                             if (Config.Options.DisplayHints)
                                             {
-                                                Renderer.ShowHelpMessage("You were spotted harming a police officer during a chase.");
+                                                Render.Functions.ShowHelpMessage("You were spotted harming a police officer during a chase.");
                                             }
 
                                             break;
@@ -1242,7 +1241,7 @@ namespace BetterChasesPlus
 
                                 if (Config.Options.DisplayHints)
                                 {
-                                    Renderer.ShowHelpMessage("You were spotted shooting a weapon during a chase.");
+                                    Render.Functions.ShowHelpMessage("You were spotted shooting a weapon during a chase.");
                                 }
                             }
                         }
@@ -1256,7 +1255,7 @@ namespace BetterChasesPlus
                     {
                         foreach (Ped ped in Peds)
                         {
-                            if (!ped.IsAlive && !PedsKilled.Contains(ped) && Helpers.IsValid(ped.Killer) && (ped.Killer.Handle == character.Handle || (Helpers.IsValid(character.CurrentVehicle) && ped.Killer.Handle == character.CurrentVehicle.Handle)))
+                            if (!ped.IsAlive && !PedsKilled.Contains(ped) && Helpers.IsValid(ped.GetKiller()) && (ped.GetKiller().Handle == character.Handle || (Helpers.IsValid(character.CurrentVehicle) && ped.GetKiller().Handle == character.CurrentVehicle.Handle)))
                             {
                                 PedsKilled.Add(ped);
                                 //GTA.UI.Notification.Show("Murder!");
@@ -1296,7 +1295,7 @@ namespace BetterChasesPlus
 
                                             if (Config.Options.DisplayHints)
                                             {
-                                                Renderer.ShowHelpMessage("You were spotted killing a civilian during a chase.");
+                                                Render.Functions.ShowHelpMessage("You were spotted killing a civilian during a chase.");
                                             }
 
                                             break;
@@ -1311,7 +1310,7 @@ namespace BetterChasesPlus
                     {
                         foreach (Ped ped in Cops)
                         {
-                            if (!ped.IsAlive && !CopsKilled.Contains(ped) && Helpers.IsValid(ped.Killer) && (ped.Killer.Handle == character.Handle || (Helpers.IsValid(character.CurrentVehicle) && ped.Killer.Handle == character.CurrentVehicle.Handle)))
+                            if (!ped.IsAlive && !CopsKilled.Contains(ped) && Helpers.IsValid(ped.GetKiller()) && (ped.GetKiller().Handle == character.Handle || (Helpers.IsValid(character.CurrentVehicle) && ped.GetKiller().Handle == character.CurrentVehicle.Handle)))
                             {
                                 CopsKilled.Add(ped);
                                 //GTA.UI.Notification.Show("Murder!");
@@ -1351,7 +1350,7 @@ namespace BetterChasesPlus
 
                                             if (Config.Options.DisplayHints)
                                             {
-                                                Renderer.ShowHelpMessage("You were spotted killing a police officer during a chase.");
+                                                Render.Functions.ShowHelpMessage("You were spotted killing a police officer during a chase.");
                                             }
 
                                             break;
@@ -1436,14 +1435,14 @@ namespace BetterChasesPlus
 
                         if (Config.Options.DisplayHints)
                         {
-                            Renderer.ShowHelpMessage("~y~PIT~w~ has been authorized.");
-                            Renderer.ShowHelpMessage("Cops will now ~y~ram you~w~ at will.");
-                            Renderer.ShowHelpMessage("However, they will still refrain from doing so in ~y~populated areas~w~.");
+                            Render.Functions.ShowHelpMessage("~y~PIT~w~ has been authorized.");
+                            Render.Functions.ShowHelpMessage("Cops will now ~y~ram you~w~ at will.");
+                            Render.Functions.ShowHelpMessage("However, they will still refrain from doing so in ~y~populated areas~w~.");
                         }
 
                         if (Config.Options.BetterChases.ShowBigMessages)
                         {
-                            Renderer.ShowBigMessage("PIT AUTHORIZED", "", Renderer.HudColor.GOLD, Renderer.HudColor.BLACK, 3000);
+                            Render.Functions.ShowBigMessage("PIT AUTHORIZED", "", Render.Classes.HudColor.GOLD, Render.Classes.HudColor.BLACK, 3000);
                         }
                     }
 
@@ -1527,14 +1526,14 @@ namespace BetterChasesPlus
                     ArrestWarrants.ActiveWarrant.Chase = ActiveChase;
                 }
 
-                //Renderer.ShowSubtitle(groundVehicles.Count + " | " + Helpers.MinGroundUnits + " " + additionalGroundUnits + " " + AdditionalGroundUnits);
+                //RendererFW.ShowSubtitle(groundVehicles.Count + " | " + Helpers.MinGroundUnits + " " + additionalGroundUnits + " " + AdditionalGroundUnits);
 
                 IsShooting = false;
                 WasWanted = IsWanted;
             }
         }
 
-        public class BetterChasesActive : Script
+        public class BetterChasesActive : BaseScript
         {
             private static bool IsWanted;
             private static bool WasWanted;
@@ -1543,11 +1542,12 @@ namespace BetterChasesPlus
             {
                 Tick += OnTick;
 
-                Interval = 1;
+                //Interval = 1; //todo this
             }
 
-            private void OnTick(object sender, EventArgs e)
+            private async Task OnTick()
             {
+                //await Delay(1); //todo this
                 if (Config.Options.BetterChases.Enabled == false)
                     return;
 
@@ -1612,7 +1612,7 @@ namespace BetterChasesPlus
                         // PIT
                         if (Config.Options.BetterChases.RequirePITAuthorization && IsWanted && Helpers.IsValid(character.CurrentVehicle) && (!ActiveChase.PITAuthorized || Helpers.IsPopulatedArea(character.Position + character.Velocity, 40f)))
                         {
-                            if (copVehicle.IsInRange(character.CurrentVehicle.Position, 14f) && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, copVehicle, true).Y > 0f && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, character.CurrentVehicle, true).Y > 0f)
+                            if (copVehicle.IsInRangeOf(character.CurrentVehicle.Position, 14f) && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, copVehicle, true).Y > 0f && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, character.CurrentVehicle, true).Y > 0f)
                             {
                                 Vector3 pos = character.CurrentVehicle.Position;
                                 Vector3 offset = Function.Call<Vector3>(Hash.GET_OFFSET_FROM_ENTITY_GIVEN_WORLD_COORDS, copVehicle, pos.X, pos.Y, pos.Z);
@@ -1628,7 +1628,7 @@ namespace BetterChasesPlus
                         // Mange Traffic -- Avoid Peds
                         if (Config.Options.BetterChases.CopsManageTraffic && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, copVehicle, true).Y > 5f)
                         {
-                            Ped[] peds = World.GetNearbyPeds(copVehicle.Position, 14f);
+                            List<Ped> peds = Helpers.GetNearbyPeds(copVehicle.Position, 14f);
                             foreach (Ped ped in peds)
                             {
                                 if (ped.Handle != character.Handle && !Helpers.IsValid(ped.CurrentVehicle))
@@ -1648,7 +1648,7 @@ namespace BetterChasesPlus
                         // Manage Traffic -- Avoid TA
                         if (Config.Options.BetterChases.CopsManageTraffic && Function.Call<Vector3>(Hash.GET_ENTITY_SPEED_VECTOR, copVehicle, true).Y > 5f)
                         {
-                            Vehicle[] vehicles = World.GetNearbyVehicles(copVehicle.Position, 14f);
+                            List<Vehicle> vehicles = Helpers.GetNearbyVehicles(copVehicle.Position, 14f);
                             foreach (Vehicle vehicle in vehicles)
                             {
                                 if (vehicle.Handle != copVehicle.Handle && (!Helpers.IsValid(character.CurrentVehicle) || character.CurrentVehicle.Handle != vehicle.Handle))

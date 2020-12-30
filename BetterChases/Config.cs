@@ -1,14 +1,12 @@
-﻿using GTA;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Serialization;
+using System.Threading.Tasks;
+using CitizenFX.Core;
+using NativeUI;
 
-namespace BetterChasesPlus
+namespace BetterChases
 {
-    public class Config : Script
+    public class Config : BaseScript
     {
         public static GlobalConfig Options = new GlobalConfig();
 
@@ -25,29 +23,40 @@ namespace BetterChasesPlus
         public Config()
         {
             Tick += OnTick;
-            KeyUp += OnKeyUp;
+            //KeyUp += OnKeyUp; todo this
 
-            Interval = 4;
+            //Interval = 4; //todo this
 
             Load();
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private async Task OnTick()
         {
+            //await Delay(4); //todo this
             Menu.MainPool.ProcessMenus();
         }
-
-        private void OnKeyUp(object sender, KeyEventArgs e)
+    
+        [Command("Open")]
+        private void OpenMenu()
+        {
+            //Toggle NativeUI Ingame Menu
+            if (!Menu.MainPool.IsAnyMenuOpen())
+            {
+                Menu.MainMenu.Visible = !Menu.MainMenu.Visible;
+            }
+        }
+        
+        /*private void OnKeyUp(object sender, KeyEventArgs e)
         {
             //Toggle NativeUI Ingame Menu
             if (e.KeyCode == Menu.MenuKey && !Menu.MainPool.IsAnyMenuOpen())
             {
                 Menu.MainMenu.Visible = !Menu.MainMenu.Visible;
             }
-        }
+        }*/
 
         public static void Save()
-        {
+        {/* todo decide about this
             XmlAttributes myXmlAttributes = new XmlAttributes();
             XmlRootAttribute myXmlRootAttribute = new XmlRootAttribute("BetterChasesPlus");
             myXmlAttributes.XmlRoot = myXmlRootAttribute;
@@ -57,11 +66,11 @@ namespace BetterChasesPlus
             XmlSerializer serializer = new XmlSerializer(Options.GetType(), myXmlAttributeOverrides);
             TextWriter writer = new StreamWriter(@"scripts\\BetterChasesConfig.xml");
             serializer.Serialize(writer, Options);
-            writer.Close();
+            writer.Close();*/
         }
 
         public static void Load()
-        {
+        {/* todo decide about this
             XmlAttributes myXmlAttributes = new XmlAttributes();
             XmlRootAttribute myXmlRootAttribute = new XmlRootAttribute("BetterChasesPlus");
             myXmlAttributes.XmlRoot = myXmlRootAttribute;
@@ -78,7 +87,7 @@ namespace BetterChasesPlus
 
                 ReloadMenu();
             }
-            catch (Exception) { };
+            catch (Exception) { };*/
         }
 
         public static void ReloadMenu()
@@ -108,7 +117,7 @@ namespace BetterChasesPlus
         {
             public Keys MenuKey { get; set; } = Keys.F7;
             public Keys SurrenderKey { get; set; } = Keys.E;
-            public GTA.Control SurrenderButton { get; set; } = GTA.Control.Cover;
+            public Control SurrenderButton { get; set; } = Control.Cover;
             public bool DisplayHints { get; set; } = true;
 
             public BetterChasesConfig BetterChases = new BetterChasesConfig();

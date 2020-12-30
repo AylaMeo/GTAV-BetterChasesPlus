@@ -1,15 +1,14 @@
-﻿using GTA;
-using GTA.Math;
-using GTA.Native;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Xml.Serialization;
+using System.Threading.Tasks;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using NativeUI;
 
-namespace BetterChasesPlus
+namespace BetterChases
 {
-    public class ArrestWarrants : Script
+    public class ArrestWarrants : BaseScript
     {
         public static bool CopSearch;
         public static bool ShowSpottedMeter;
@@ -38,7 +37,7 @@ namespace BetterChasesPlus
             public PedDescription PedDescription = new PedDescription();
             public int pedHash = 0;
             public int vehicleHash = 0;
-            public BetterChases.Chase Chase = new BetterChases.Chase();
+            public global::BetterChases.BetterChases.Chase Chase = new global::BetterChases.BetterChases.Chase();
         }
 
         public class VehicleDescription
@@ -84,23 +83,24 @@ namespace BetterChasesPlus
         {
             Tick += OnTick;
 
-            Interval = 250;
+            //Interval = 250; todo this
 
             LoadWarrants();
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private async Task OnTick()
         {
+            await Delay(250); //todo this
             //System.Diagnostics.Stopwatch Stopwatch = System.Diagnostics.Stopwatch.StartNew();
             //Stopwatch.Start();
-
+            
             if (Config.Options.ArrestWarrants.Enabled == false)
                 return;
 
             int wantedLevel = Game.Player.WantedLevel;
             Ped character = Game.Player.Character;
             IsWanted = Game.Player.WantedLevel > 0 ? true : false;
-
+            
             // Arrested -- Clear Warrant
             if (!IsWanted && (ActiveWarrant.pedHash != 0 || ActiveWarrant.vehicleHash != 0) && Function.Call<int>(Hash.GET_TIME_SINCE_LAST_ARREST) >= 0 && Function.Call<int>(Hash.GET_TIME_SINCE_LAST_ARREST) < 10000)
             {
@@ -119,7 +119,7 @@ namespace BetterChasesPlus
                 // Clear recognition stuff
                 SpottedMeter = 0;
                 ShowSpottedMeter = false;
-                Renderer.Markers.Clear();
+                Render.Variables.Markers.Clear();
             }
             // Changed from Wanted to not Wanted
             else if (!IsWanted && WasWanted)
@@ -189,7 +189,7 @@ namespace BetterChasesPlus
                     }
                 }
             }
-
+            
             // Identify Character
             if (IsWanted && ActiveWarrant.pedHash == 0)
             {
@@ -215,7 +215,7 @@ namespace BetterChasesPlus
                     IdentifyVehicle();
                 }
             }
-
+            
             // Warrent search
             if (!IsWanted && (PedWarrant.pedHash != 0 || (VehicleWarrant.vehicleHash != 0 && Helpers.IsValid(character.CurrentVehicle) && VehicleWarrant.vehicleHash == character.CurrentVehicle.Model.Hash)))
             {
@@ -225,7 +225,7 @@ namespace BetterChasesPlus
 
                 double maxSpotted = 0;
                 bool pedSpotted = false;
-                Renderer.Markers.Clear();
+                Render.Variables.Markers.Clear();
 
                 // Check Warrant Description
                 if (Game.GameTime > DescriptionCheckTime + 10000)
@@ -300,31 +300,33 @@ namespace BetterChasesPlus
                             }
                         }
 
-                        Renderer.UIMarker Marker = new Renderer.UIMarker { Type = MarkerType.ChevronUpx1, Entity = cop.Ped };
-                        if (spotted > 0 && spotted <= 5)
+                        Render.Classes.UIMarker Marker = new Render.Classes.UIMarker { Type = MarkerType.ChevronUpx1, Entity = cop.Ped };
+                        
+                         if (spotted > 0 && spotted <= 5)
                         {
-                            Marker.Color = Color.Green;
+                            Marker.Color = Colors.Green;
                         }
                         else if (spotted > 5 && spotted < 20)
                         {
-                            Marker.Color = Color.Cyan;
+                            Marker.Color = Colors.Cyan;
                         }
                         else if (spotted >= 20 && spotted < 50)
                         {
-                            Marker.Color = Color.Yellow;
+                            Marker.Color = Colors.Yellow;
                         }
                         else if (spotted >= 50 && spotted < 70)
                         {
-                            Marker.Color = Color.Orange;
+                            Marker.Color = Colors.Orange;
                         }
                         else if (spotted >= 70)
                         {
-                            Marker.Color = Color.Red;
+                            Marker.Color = Colors.Red;
                         }
+                        
 
                         if (spotted > maxSpotted) maxSpotted = spotted;
 
-                        if (Config.Options.ArrestWarrants.ShowSpottedMeter) Renderer.Markers.Add(Marker);
+                        if (Config.Options.ArrestWarrants.ShowSpottedMeter) Render.Variables.Markers.Add(Marker);
                     }
                 }
 
@@ -352,9 +354,9 @@ namespace BetterChasesPlus
                 // Clear recognition stuff
                 SpottedMeter = 0;
                 ShowSpottedMeter = false;
-                Renderer.Markers.Clear();
+                Render.Variables.Markers.Clear();
             }
-
+            /* todo 
             // Stolen vehicle (needs to be at the bottom)
             //if (Options.ArrestWarrants.EnableStolenVehicles && !IsWanted && Helpers.IsValid(character.CurrentVehicle) && character.CurrentVehicle.IsStolen && (VehicleWarrant.vehicleHash == 0 || VehicleWarrant.vehicleHash != character.CurrentVehicle.Model.Hash))
             //{
@@ -376,12 +378,12 @@ namespace BetterChasesPlus
 
             //        if (Options.DisplayHints)
             //        {
-            //            Renderer.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle as stolen.");
+            //            RendererFW.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle as stolen.");
             //        }
 
             //        if (Options.ArrestWarrants.ShowBigMessages)
             //        {
-            //            Renderer.ShowBigMessage("STOLEN VEHICLE", "", Renderer.HudColor.GOLD, Renderer.HudColor.BLACK, 3000);
+            //            RendererFW.ShowBigMessage("STOLEN VEHICLE", "", RendererFW.HudColor.GOLD, RendererFW.HudColor.BLACK, 3000);
             //        }
 
             //        VehicleWarrant = ActiveWarrant;
@@ -396,6 +398,7 @@ namespace BetterChasesPlus
 
             WasWanted = IsWanted;
             ActiveCharacter = character;
+            */
         }
 
         public static void IdentifyVehicle(bool showPlayerMessages = true)
@@ -411,12 +414,12 @@ namespace BetterChasesPlus
                     {
                         // Merge warrants
                         ActiveWarrant.WantedLevel = ActiveWarrant.WantedLevel > warrant.WantedLevel ? ActiveWarrant.WantedLevel : warrant.WantedLevel;
-                        ActiveWarrant.Chase = BetterChases.MergeChases(ActiveWarrant.Chase, warrant.Chase);
+                        ActiveWarrant.Chase = global::BetterChases.BetterChases.MergeChases(ActiveWarrant.Chase, warrant.Chase);
                         ActiveWarrant.pedHash = ActiveWarrant.pedHash != 0 ? ActiveWarrant.pedHash : warrant.pedHash;
                         ActiveWarrant.vehicleHash = warrant.vehicleHash;
                         Warrants.Remove(warrant);
                         Helpers.WantedLevel = ActiveWarrant.WantedLevel;
-                        BetterChases.ActiveChase = ActiveWarrant.Chase;
+                        global::BetterChases.BetterChases.ActiveChase = ActiveWarrant.Chase;
                         break;
                     }
                 }
@@ -433,8 +436,8 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints && showPlayerMessages)
                 {
-                    Renderer.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle as belonging to a previous suspect they were looking for.");
-                    Renderer.ShowHelpMessage("Previous arrest warrant has been combined with the current one.");
+                    Render.Functions.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle as belonging to a previous suspect they were looking for.");
+                    Render.Functions.ShowHelpMessage("Previous arrest warrant has been combined with the current one.");
                 }
             }
             else
@@ -456,8 +459,8 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints && showPlayerMessages)
                 {
-                    Renderer.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle. Cops will recognise it if you escape.");
-                    Renderer.ShowHelpMessage("You can avoid this by acquiring a new vehicle while out of the cops' sight.");
+                    Render.Functions.ShowHelpMessage("The ~b~LSPD~w~ has identified your vehicle. Cops will recognise it if you escape.");
+                    Render.Functions.ShowHelpMessage("You can avoid this by acquiring a new vehicle while out of the cops' sight.");
                 }
 
                 ActiveWarrant.vehicleHash = character.CurrentVehicle.Model.Hash;
@@ -465,7 +468,7 @@ namespace BetterChasesPlus
 
             if (Config.Options.ArrestWarrants.ShowBigMessages && showPlayerMessages)
             {
-                Renderer.ShowBigMessage("VEHICLE IDENTIFIED", "", Renderer.HudColor.GOLD, Renderer.HudColor.BLACK, 3000);
+                Render.Functions.ShowBigMessage("VEHICLE IDENTIFIED", "", Render.Classes.HudColor.GOLD, Render.Classes.HudColor.BLACK, 3000);
             }
 
             // Vehicle Description
@@ -489,12 +492,12 @@ namespace BetterChasesPlus
                     {
                         // Merge warrants
                         ActiveWarrant.WantedLevel = ActiveWarrant.WantedLevel > warrant.WantedLevel ? ActiveWarrant.WantedLevel : warrant.WantedLevel;
-                        ActiveWarrant.Chase = BetterChases.MergeChases(ActiveWarrant.Chase, warrant.Chase);
+                        ActiveWarrant.Chase = global::BetterChases.BetterChases.MergeChases(ActiveWarrant.Chase, warrant.Chase);
                         ActiveWarrant.vehicleHash = ActiveWarrant.vehicleHash != 0 ? ActiveWarrant.vehicleHash : warrant.vehicleHash;
                         ActiveWarrant.pedHash = warrant.pedHash;
                         Warrants.Remove(warrant);
                         Helpers.WantedLevel = ActiveWarrant.WantedLevel;
-                        BetterChases.ActiveChase = ActiveWarrant.Chase;
+                        global::BetterChases.BetterChases.ActiveChase = ActiveWarrant.Chase;
                         break;
                     }
                 }
@@ -511,8 +514,8 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints && showPlayerMessages)
                 {
-                    Renderer.ShowHelpMessage(((PedHash)ActiveWarrant.pedHash).ToString() + " has been identified by the ~b~LSPD~w~ as a previous suspect they were looking for.");
-                    Renderer.ShowHelpMessage("Previous arrest warrant has been combined with the current one.");
+                    Render.Functions.ShowHelpMessage(((PedHash)ActiveWarrant.pedHash).ToString() + " has been identified by the ~b~LSPD~w~ as a previous suspect they were looking for.");
+                    Render.Functions.ShowHelpMessage("Previous arrest warrant has been combined with the current one.");
                 }
             }
             else
@@ -528,14 +531,14 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints && showPlayerMessages)
                 {
-                    Renderer.ShowHelpMessage(((PedHash)ActiveWarrant.pedHash).ToString() + " has been identified by the ~b~LSPD~w~. Cops will be able to recognise you if you escape.");
-                    Renderer.ShowHelpMessage("Change clothes while out of sight to avoid being recognised after escaping.");
+                    Render.Functions.ShowHelpMessage(((PedHash)ActiveWarrant.pedHash).ToString() + " has been identified by the ~b~LSPD~w~. Cops will be able to recognise you if you escape.");
+                    Render.Functions.ShowHelpMessage("Change clothes while out of sight to avoid being recognised after escaping.");
                 }
             }
 
             if (Config.Options.ArrestWarrants.ShowBigMessages && showPlayerMessages)
             {
-                Renderer.ShowBigMessage("IDENTIFIED", "", Renderer.HudColor.GOLD, Renderer.HudColor.BLACK, 3000);
+                Render.Functions.ShowBigMessage("IDENTIFIED", "", Render.Classes.HudColor.GOLD, Render.Classes.HudColor.BLACK, 3000);
             }
 
             // Ped Description
@@ -597,20 +600,20 @@ namespace BetterChasesPlus
                 {
                     if (warrant.pedHash != 0)
                     {
-                        Renderer.ShowHelpMessage(((PedHash)warrant.pedHash).ToString() + "'s Arrest Warrant has expired. You are now free to roam around without worries.");
-                        Renderer.ShowHelpMessage("~g~The police have forgotten about you~w~.");
+                        Render.Functions.ShowHelpMessage(((PedHash)warrant.pedHash).ToString() + "'s Arrest Warrant has expired. You are now free to roam around without worries.");
+                        Render.Functions.ShowHelpMessage("~g~The police have forgotten about you~w~.");
                     }
                     else
                     {
-                        Renderer.ShowHelpMessage("The " + Function.Call<string>(Hash.GET_DISPLAY_NAME_FROM_VEHICLE_MODEL, Helpers.GetModel(warrant.vehicleHash)) + "'s Arrest Warrant has expired. You are now free to roam around without worries.");
-                        Renderer.ShowHelpMessage("~g~The police have forgotten about your vehicle~w~.");
+                        Render.Functions.ShowHelpMessage("The " + Function.Call<string>(Hash.GET_DISPLAY_NAME_FROM_VEHICLE_MODEL, Helpers.GetModel(warrant.vehicleHash)) + "'s Arrest Warrant has expired. You are now free to roam around without worries.");
+                        Render.Functions.ShowHelpMessage("~g~The police have forgotten about your vehicle~w~.");
                     }
                 }
             }
 
             if (Config.Options.ArrestWarrants.ShowBigMessages)
             {
-                Renderer.ShowBigMessage("WARRANT LIFTED", "", Renderer.HudColor.BLUE, Renderer.HudColor.BLACK, 3000);
+                Render.Functions.ShowBigMessage("WARRANT LIFTED", "", Render.Classes.HudColor.BLUE, Render.Classes.HudColor.BLACK, 3000);
             }
 
             SaveWarrants();
@@ -689,44 +692,44 @@ namespace BetterChasesPlus
 
             if (Config.Options.DisplayHints)
             {
-                Renderer.ShowHelpMessage("You have escaped, but you're not safe yet.");
+                Render.Functions.ShowHelpMessage("You have escaped, but you're not safe yet.");
                 if (warrant.pedHash != 0)
                 {
-                    Renderer.ShowHelpMessage("The Arrest Warrant has ~y~" + ((PedHash)warrant.pedHash).ToString() + "~w~'s appareance description.");
-                    Renderer.ShowHelpMessage("You can change clothes to prevent the cops from being able to recognise you.");
+                    Render.Functions.ShowHelpMessage("The Arrest Warrant has ~y~" + ((PedHash)warrant.pedHash).ToString() + "~w~'s appareance description.");
+                    Render.Functions.ShowHelpMessage("You can change clothes to prevent the cops from being able to recognise you.");
                     if (warrant.vehicleHash != 0)
                     {
-                        Renderer.ShowHelpMessage("The Arrest Warrant has your vehicle's description too.");
+                        Render.Functions.ShowHelpMessage("The Arrest Warrant has your vehicle's description too.");
                         if (Helpers.IsValid(Game.Player.Character.CurrentVehicle) && Game.Player.Character.CurrentVehicle.Model.Hash == warrant.vehicleHash)
                         {
-                            Renderer.ShowHelpMessage("It is best that you get rid of the vehicle, or modify it.");
+                            Render.Functions.ShowHelpMessage("It is best that you get rid of the vehicle, or modify it.");
                         }
                         else
                         {
-                            Renderer.ShowHelpMessage("However, you are in a different vehicle, so you don't have to worry about the vehicle warrant.");
+                            Render.Functions.ShowHelpMessage("However, you are in a different vehicle, so you don't have to worry about the vehicle warrant.");
                         }
                     }
-                    Renderer.ShowHelpMessage("You can also switch to another Character and wait for ~y~" + ((PedHash)warrant.pedHash).ToString() + "~w~'s Arrest Warrant to expire.");
+                    Render.Functions.ShowHelpMessage("You can also switch to another Character and wait for ~y~" + ((PedHash)warrant.pedHash).ToString() + "~w~'s Arrest Warrant to expire.");
                 }
                 else if (warrant.vehicleHash != 0)
                 {
-                    Renderer.ShowHelpMessage("~y~" + ((PedHash)Game.Player.Character.Model.Hash).ToString() + "~w~ hasn't been identfied, but ~y~" + ((PedHash)Game.Player.Character.Model.Hash).ToString() + "~w~'s vehicle has.");
+                    Render.Functions.ShowHelpMessage("~y~" + ((PedHash)Game.Player.Character.Model.Hash).ToString() + "~w~ hasn't been identfied, but ~y~" + ((PedHash)Game.Player.Character.Model.Hash).ToString() + "~w~'s vehicle has.");
                     if (Helpers.IsValid(Game.Player.Character.CurrentVehicle) && Game.Player.Character.CurrentVehicle.Model.Hash == warrant.vehicleHash)
                     {
-                        Renderer.ShowHelpMessage("It is best that you get rid of the vehicle, or modify it.");
+                        Render.Functions.ShowHelpMessage("It is best that you get rid of the vehicle, or modify it.");
                     }
                     else
                     {
-                        Renderer.ShowHelpMessage("However, you are in a different vehicle, so you don't have to worry about the vehicle warrant.");
+                        Render.Functions.ShowHelpMessage("However, you are in a different vehicle, so you don't have to worry about the vehicle warrant.");
                     }
                 }
-                Renderer.ShowHelpMessage("Cop's will be on full alert for a while, but they will eventually lose interest.");
-                Renderer.ShowHelpMessage("The closer the Arrest Warrant is to expire, the less likely cops will recognise you.");
+                Render.Functions.ShowHelpMessage("Cop's will be on full alert for a while, but they will eventually lose interest.");
+                Render.Functions.ShowHelpMessage("The closer the Arrest Warrant is to expire, the less likely cops will recognise you.");
             }
 
             if (Config.Options.ArrestWarrants.ShowBigMessages)
             {
-                Renderer.ShowBigMessage("ESCAPED", "", Renderer.HudColor.BLUE, Renderer.HudColor.BLACK, 3000);
+                Render.Functions.ShowBigMessage("ESCAPED", "", Render.Classes.HudColor.BLUE, Render.Classes.HudColor.BLACK, 3000);
             }
 
             Warrants.Add(warrant);
@@ -774,7 +777,7 @@ namespace BetterChasesPlus
             }
 
             // Restore Better Chases Chase - first merging current active chase
-            BetterChases.ActiveChase = BetterChases.MergeChases(BetterChases.ActiveChase, warrant.Chase);
+            global::BetterChases.BetterChases.ActiveChase = global::BetterChases.BetterChases.MergeChases(global::BetterChases.BetterChases.ActiveChase, warrant.Chase);
 
             if (WasPedSpotted)
             {
@@ -787,12 +790,12 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints)
                 {
-                    Renderer.ShowHelpMessage("You have been ~r~recognised~w~ by a cop. The chase will resume.");
+                    Render.Functions.ShowHelpMessage("You have been ~r~recognised~w~ by a cop. The chase will resume.");
                 }
 
                 if (Config.Options.ArrestWarrants.ShowBigMessages)
                 {
-                    Renderer.ShowBigMessage("SPOTTED", "", Renderer.HudColor.RED, Renderer.HudColor.BLACK, 3000);
+                    Render.Functions.ShowBigMessage("SPOTTED", "", Render.Classes.HudColor.RED, Render.Classes.HudColor.BLACK, 3000);
                 }
             }
             else
@@ -806,12 +809,12 @@ namespace BetterChasesPlus
 
                 if (Config.Options.DisplayHints)
                 {
-                    Renderer.ShowHelpMessage("Your vehicle has been ~r~recognised~w~ by a cop. The chase will resume and the Arrest Warrant has been updated.");
+                    Render.Functions.ShowHelpMessage("Your vehicle has been ~r~recognised~w~ by a cop. The chase will resume and the Arrest Warrant has been updated.");
                 }
 
                 if (Config.Options.ArrestWarrants.ShowBigMessages)
                 {
-                    Renderer.ShowBigMessage("VEHICLE SPOTTED", "", Renderer.HudColor.RED, Renderer.HudColor.BLACK, 3000);
+                    Render.Functions.ShowBigMessage("VEHICLE SPOTTED", "", Render.Classes.HudColor.RED, Render.Classes.HudColor.BLACK, 3000);
                 }
             }
         }
@@ -1087,14 +1090,14 @@ namespace BetterChasesPlus
             OutputArgument color2 = new OutputArgument();
 
             Function.Call(Hash.GET_VEHICLE_COLOURS, vehicle, color1, color2);
-            colors.primary = color1.GetResult<GTA.VehicleColor>();
-            colors.secondary = color2.GetResult<GTA.VehicleColor>();
+            colors.primary = color1.GetResult<VehicleColor>();
+            colors.secondary = color2.GetResult<VehicleColor>();
 
             return colors;
         }
 
         public static void SaveWarrants()
-        {
+        {/*
             XmlAttributes myXmlAttributes = new XmlAttributes();
             XmlRootAttribute myXmlRootAttribute = new XmlRootAttribute("Warrants");
             myXmlAttributes.XmlRoot = myXmlRootAttribute;
@@ -1104,11 +1107,11 @@ namespace BetterChasesPlus
             XmlSerializer serializer = new XmlSerializer(typeof(List<Warrant>), myXmlAttributeOverrides);
             TextWriter writer = new StreamWriter(@"scripts\\BetterChasesWarrants.xml");
             serializer.Serialize(writer, Warrants);
-            writer.Close();
+            writer.Close();*/
         }
 
         public static void LoadWarrants()
-        {
+        {/* todo decide about this
             XmlAttributes myXmlAttributes = new XmlAttributes();
             XmlRootAttribute myXmlRootAttribute = new XmlRootAttribute("Warrants");
             myXmlAttributes.XmlRoot = myXmlRootAttribute;
@@ -1123,7 +1126,7 @@ namespace BetterChasesPlus
                 Warrants = (List<Warrant>)serializer.Deserialize(reader);
                 reader.Close();
             }
-            catch (Exception) { };
+            catch (Exception) { };*/ 
         }
     }
 }

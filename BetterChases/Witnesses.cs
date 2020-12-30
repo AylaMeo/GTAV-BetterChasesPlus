@@ -1,13 +1,13 @@
-﻿using GTA;
-using GTA.Math;
-using GTA.Native;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using CitizenFX.Core;
+using CitizenFX.Core.Native;
 
-namespace BetterChasesPlus
+namespace BetterChases
 {
-    public class Witnesses : Script
+    public class Witnesses : BaseScript
     {
         private static readonly bool ShowBlips = false;
         private static readonly int MaxCitizenWitnesses = 0;
@@ -32,13 +32,15 @@ namespace BetterChasesPlus
         public Witnesses()
         {
             Tick += OnTick;
-            Aborted += Shutdown;
+            //Aborted += Shutdown; todo this
 
-            Interval = 200;
+            //Interval = 200; todo this
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private async Task OnTick()
         {
+            await Delay(200); //todo this
+            
             if (!ArrestWarrants.CopSearch && !BetterChases.CopSearch)
             {
                 Citizens.Clear();
@@ -84,16 +86,16 @@ namespace BetterChasesPlus
                     {
                         if (citizen.Ped.CurrentVehicle.Model.IsHelicopter)
                         {
-                            ray = World.Raycast(citizen.Ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectFlags.Everything);
+                            ray = World.Raycast(citizen.Ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectOptions.Everything);
                         }
                         else
                         {
-                            ray = World.Raycast(citizen.Ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectFlags.Everything); // citizen.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
+                            ray = World.Raycast(citizen.Ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectOptions.Everything); // citizen.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
                         }
                     }
                     else
                     {
-                        ray = World.Raycast(citizen.Ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectFlags.Everything); // citizen.Ped.Model.GetDimensions().Z
+                        ray = World.Raycast(citizen.Ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectOptions.Everything); // citizen.Ped.Model.GetDimensions().Z
                     }
                 }
 
@@ -135,16 +137,16 @@ namespace BetterChasesPlus
                     {
                         if (cop.Ped.CurrentVehicle.Model.IsHelicopter)
                         {
-                            ray = World.Raycast(cop.Ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectFlags.Everything);
+                            ray = World.Raycast(cop.Ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectOptions.Everything);
                         }
                         else
                         {
-                            ray = World.Raycast(cop.Ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectFlags.Everything); // cop.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
+                            ray = World.Raycast(cop.Ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectOptions.Everything); // cop.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
                         }
                     }
                     else
                     {
-                        ray = World.Raycast(cop.Ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectFlags.Everything); // citizen.Ped.Model.GetDimensions().Z
+                        ray = World.Raycast(cop.Ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectOptions.Everything); // citizen.Ped.Model.GetDimensions().Z
                     }
                 }
 
@@ -170,7 +172,7 @@ namespace BetterChasesPlus
             List<Ped> NearbyPeds = new List<Ped>();
             if (Citizens.Count < MaxCitizenWitnesses || Cops.Count < MaxCopWitnesses)
             {
-                NearbyPeds = new List<Ped>(World.GetNearbyPeds(Character, MaxWitnessDistance));
+                NearbyPeds = new List<Ped>(Helpers.GetNearbyPeds(Character.Position, MaxWitnessDistance));
                 NearbyPeds = NearbyPeds.OrderByDescending(Ped => (Character.Position - Ped.Position).Length()).ToList();
 
                 foreach (Ped ped in NearbyPeds)
@@ -212,16 +214,16 @@ namespace BetterChasesPlus
                         {
                             if (ped.CurrentVehicle.Model.IsHelicopter)
                             {
-                                ray = World.Raycast(ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectFlags.Everything);
+                                ray = World.Raycast(ped.CurrentVehicle.Position + new Vector3(0, 0, -10f), Character.Position, IntersectOptions.Everything);
                             }
                             else
                             {
-                                ray = World.Raycast(ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectFlags.Everything); // cop.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
+                                ray = World.Raycast(ped.CurrentVehicle.Position + new Vector3(0, 0, 10 * 1.1f), Character.Position, IntersectOptions.Everything); // cop.Ped.CurrentVehicle.Model.GetDimensions().Z * 1.1f
                             }
                         }
                         else
                         {
-                            ray = World.Raycast(ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectFlags.Everything); // ped.Model.GetDimensions().Z
+                            ray = World.Raycast(ped.Position + new Vector3(0, 0, 5), Character.Position, IntersectOptions.Everything); // ped.Model.GetDimensions().Z
                         }
                     }
 
@@ -233,7 +235,8 @@ namespace BetterChasesPlus
                             Cops.Add(NewWitness);
                             if (ShowBlips)
                             {
-                                ped.AddBlip();
+                                //ped.AddBlip();
+                                ped.AttachBlip(); //todo is this right?
                                 //ped.CurrentBlip.Color = BlipColor.Blue;
                             }
                         }
@@ -243,7 +246,8 @@ namespace BetterChasesPlus
                             Citizens.Add(NewWitness);
                             if (ShowBlips)
                             {
-                                ped.AddBlip();
+                                //ped.AddBlip();
+                                ped.AttachBlip(); //todo is this right?
                                 //ped.CurrentBlip.Color = BlipColor.White;
                             }
                         }
@@ -394,11 +398,11 @@ namespace BetterChasesPlus
 
                 if (vehicle.Model == VehicleHash.Rhino) return false;
 
-                if (vehicle.Model.IsBike || vehicle.Model.IsBicycle || vehicle.Model.IsQuadBike || (vehicle.HasRoof && vehicle.RoofState == VehicleRoofState.Opened)) return true;
+                if (vehicle.Model.IsBike || vehicle.Model.IsBicycle || vehicle.Model.IsQuadbike || (vehicle.HasRoof && vehicle.RoofState == VehicleRoofState.Opened)) return true;
 
-                if (vehicle.Windows.AllWindowsIntact && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != VehicleWindowTint.None && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != VehicleWindowTint.Stock && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != (VehicleWindowTint)(-1)) return false;
+                if (vehicle.Windows.AreAllWindowsIntact && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != VehicleWindowTint.None && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != VehicleWindowTint.Stock && Function.Call<VehicleWindowTint>(Hash.GET_VEHICLE_WINDOW_TINT, vehicle) != (VehicleWindowTint)(-1)) return false;
 
-                if (Game.IsControlPressed(Control.VehicleDuck)) return false;
+                if (Game.IsControlPressed(0, Control.VehicleDuck)) return false;
             }
 
             return true;
@@ -406,7 +410,8 @@ namespace BetterChasesPlus
 
         public static Vector3 GetDimensions(Model model)
         {
-            return Vector3.Subtract(model.Dimensions.frontTopRight, model.Dimensions.rearBottomLeft);
+            return model.GetDimensions(); //todo is this right?
+            //return Vector3.Subtract(model.Dimensions.frontTopRight, model.Dimensions.rearBottomLeft);
         }
 
         public static float GetVolume(Vector3 dimensions)
