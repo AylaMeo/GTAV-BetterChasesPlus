@@ -1,4 +1,11 @@
-## Better Chases+ is a continuation of Eddlm's & Guadmaz's famous Better Chases and Arrest Warrants mods, + Updates by Daimian
+## This is a very early concept port to fivem, it's been tested for about 1 hour and has bugs, original GTA5MODS Desc below
+
+## Credits
+### https://www.gta5-mods.com/scripts/better-chases
+### https://github.com/jglassmaker/GTAV-BetterChasesPlus
+### https://www.gta5-mods.com/scripts/better-chases-arrest-warrant
+
+## Better Chases+ is a continuation of Eddlm's & Guadmaz's famous Better Chases and Arrest Warrants mods
 
 ### Features
 
